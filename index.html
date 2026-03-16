@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClipMaker — Clipes que Viralizam</title>
+<script src="https://upload-widget.cloudinary.com/latest/global/all.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --white: #ffffff;
+  --off: #f5f5f7;
+  --off2: #e8e8ed;
+  --text: #1d1d1f;
+  --muted: #6e6e73;
+  --muted2: #a1a1a6;
+  --blue: #0071e3;
+  --blue-dark: #0077ed;
+  --blue-light: #2997ff;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Manrope', -apple-system, sans-serif;
+  background: var(--white);
+  color: var(--text);
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* CURSOR */
+#cursor {
+  width: 8px; height: 8px;
+  background: var(--text);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+}
+#cursor-ring {
+  width: 36px; height: 36px;
+  border: 1.5px solid rgba(0,0,0,0.2);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  transition: width 0.35s cubic-bezier(.23,1,.32,1), height 0.35s cubic-bezier(.23,1,.32,1), border-color 0.3s;
+}
+.cursor-expand ~ #cursor-ring,
+body:has(button:hover) #cursor-ring { width: 56px; height: 56px; border-color: rgba(0,113,227,0.35); }
+
+/* NAV */
+nav {
+  position: fixed; top: 0; width: 100%; z-index: 500;
+  height: 52px; display: flex; align-items: center;
+  justify-content: space-between; padding: 0 22px;
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid rgba(0,0,0,0.07);
+}
+.nav-logo { font-weight: 700; font-size: 1.05rem; letter-spacing: -0.03em; }
+.nav-links { display: flex; gap: 28px; list-style: none; position: absolute; left: 50%; transform: translateX(-50%); }
+.nav-links a { font-size: 0.78rem; color: var(--text); text-decoration: none; opacity: 0.82; transition: opacity 0.2s; }
+.nav-links a:hover { opacity: 1; }
+.nav-cta { font-size: 0.8rem; font-weight: 500; color: var(--blue); text-decoration: none; }
+
+/* HERO */
+.hero {
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; padding: 120px 24px 80px;
+  background: var(--white); position: relative; overflow: hidden;
+}
+.hero-bg {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,113,227,0.07) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 40% at 80% 70%, rgba(41,151,255,0.05) 0%, transparent 60%);
+}
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 0.78rem; font-weight: 500; color: var(--blue);
+  margin-bottom: 28px; letter-spacing: 0.01em;
+  opacity: 0; animation: fadeUp 0.8s 0.1s forwards;
+}
+.tag-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--blue);
+  animation: pulsedot 2.5s infinite;
+}
+@keyframes pulsedot {
+  0%,100%{box-shadow:0 0 0 0 rgba(0,113,227,.5)}
+  50%{box-shadow:0 0 0 5px rgba(0,113,227,0)}
+}
+.hero h1 {
+  font-size: clamp(3rem, 7vw, 5.8rem); font-weight: 700;
+  letter-spacing: -0.045em; line-height: 1.04; max-width: 860px;
+  opacity: 0; animation: fadeUp 0.9s 0.2s forwards;
+}
+.grad { background: linear-gradient(135deg, #0071e3, #2997ff 50%, #30d158); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.hero-sub {
+  font-size: clamp(1rem, 2vw, 1.2rem); font-weight: 300;
+  color: var(--muted); max-width: 520px; line-height: 1.65;
+  margin: 22px auto 0; opacity: 0; animation: fadeUp 0.9s 0.35s forwards;
+}
+.hero-btns {
+  display: flex; gap: 16px; justify-content: center; align-items: center;
+  margin-top: 42px; flex-wrap: wrap; opacity: 0; animation: fadeUp 0.9s 0.5s forwards;
+}
+.btn-pill {
+  background: var(--blue); color: white; font-family: 'Manrope',sans-serif;
+  font-size: 0.95rem; font-weight: 500; padding: 13px 26px;
+  border-radius: 980px; border: none; cursor: none;
+  transition: background 0.2s, transform 0.15s;
+  letter-spacing: -0.01em;
+}
+.btn-pill:hover { background: var(--blue-dark); transform: scale(1.02); }
+.btn-ghost-pill {
+  background: transparent; border: none; color: var(--blue);
+  font-family: 'Manrope',sans-serif; font-size: 0.95rem; font-weight: 500;
+  cursor: none; display: flex; align-items: center; gap: 4px;
+  transition: gap 0.2s;
+}
+.btn-ghost-pill:hover { gap: 9px; }
+
+/* HERO WINDOW */
+.hero-visual {
+  width: 100%; max-width: 860px; margin-top: 68px;
+  opacity: 0; animation: fadeUp 1s 0.65s forwards;
+}
+.hw {
+  background: #1c1c1e; border-radius: 14px; overflow: hidden;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.22), 0 0 0 1px rgba(255,255,255,0.08) inset;
+}
+.hwbar {
+  background: #2c2c2e; height: 34px; display: flex; align-items: center;
+  padding: 0 12px; gap: 7px;
+}
+.hwdot { width: 10px; height: 10px; border-radius: 50%; }
+.hwbody {
+  display: grid; grid-template-columns: 1fr 1px 1fr;
+}
+.hwdivider { background: rgba(255,255,255,0.06); }
+.hwleft, .hwright { padding: 22px 24px; }
+.hwlabel {
+  font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em;
+  color: #636366; margin-bottom: 14px; font-weight: 600;
+}
+.waveform { display: flex; align-items: flex-end; gap: 2px; height: 56px; margin-bottom: 16px; }
+.wbar { flex: 1; background: #2997ff; border-radius: 2px; opacity: 0.55; transition: height 0.6s ease; }
+.wbar.hi { opacity: 1; background: #30d158; }
+.hclip {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 8px; padding: 9px 12px; margin-bottom: 7px;
+}
+.hclip.hl { background: rgba(0,113,227,0.18); border-color: rgba(0,113,227,0.35); }
+.hdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.hclip-t { font-size: 0.75rem; color: #ebebf5; font-weight: 300; }
+.hclip-time { font-size: 0.68rem; color: #636366; margin-left: auto; white-space: nowrap; }
+
+/* STATS */
+.stats-bar {
+  background: #1d1d1f; padding: 64px 24px;
+}
+.stats-inner {
+  max-width: 860px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 32px; text-align: center;
+}
+.sn { font-size: 2.6rem; font-weight: 700; letter-spacing: -0.04em; color: white; line-height: 1; }
+.sn em { font-style: normal; color: #2997ff; }
+.sd { font-size: 0.8rem; color: rgba(255,255,255,0.45); margin-top: 8px; font-weight: 300; }
+
+/* HOW IT WORKS */
+.hiw { padding: 120px 24px; background: white; }
+.features-wrap { max-width: 920px; margin: 80px auto 0; }
+.frow {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 72px;
+  align-items: center; padding: 72px 0; border-top: 1px solid var(--off2);
+  opacity: 0; transform: translateY(36px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.frow:first-child { border-top: none; }
+.frow.rev { direction: rtl; }
+.frow.rev > * { direction: ltr; }
+.frow.vis { opacity: 1; transform: none; }
+.chip { font-size: 0.73rem; font-weight: 600; color: var(--blue); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 12px; }
+.frow h3 { font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: 700; letter-spacing: -0.035em; line-height: 1.15; margin-bottom: 14px; }
+.frow p { font-size: 0.97rem; font-weight: 300; color: var(--muted); line-height: 1.7; margin-bottom: 20px; }
+.flink { color: var(--blue); font-size: 0.88rem; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: gap 0.2s; }
+.flink:hover { gap: 8px; }
+
+/* Feature Visuals */
+.fv { background: var(--off); border-radius: 18px; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+
+.uploader { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.up-icon { width: 64px; height: 64px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 24px rgba(0,0,0,0.1); }
+.up-prog-wrap { width: 130px; height: 4px; background: var(--off2); border-radius: 100px; overflow: hidden; }
+.up-fill { height: 100%; background: var(--blue); border-radius: 100px; animation: fillprog 3s ease-in-out infinite alternate; }
+@keyframes fillprog { 0%{width:10%} 100%{width:92%} }
+
+.ai-panel { width: 100%; padding: 28px; }
+.ai-row { margin-bottom: 14px; }
+.ai-row-head { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+.ai-score { color: var(--blue); font-weight: 700; }
+.ai-score.green { color: #1a7f37; }
+.ai-track { height: 5px; background: var(--off2); border-radius: 100px; overflow: hidden; }
+.ai-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--blue), var(--blue-light)); }
+
+.clips-panel { width: 100%; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+.cthumb { display: flex; align-items: center; gap: 10px; background: white; border-radius: 10px; padding: 11px 13px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); transition: transform 0.25s, box-shadow 0.25s; }
+.cthumb:hover { transform: translateX(4px); box-shadow: 0 4px 18px rgba(0,0,0,0.1); }
+.cicon { width: 36px; height: 36px; background: #e8f4ff; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ctitle { font-size: 0.78rem; font-weight: 600; color: var(--text); }
+.cmeta { font-size: 0.68rem; color: var(--muted2); }
+.cbadge { font-size: 0.62rem; font-weight: 700; padding: 3px 8px; border-radius: 100px; margin-left: auto; flex-shrink: 0; }
+
+/* APP SECTION */
+.app-sec { background: var(--off); padding: 100px 24px; }
+.app-inner { max-width: 640px; margin: 0 auto; }
+.app-card { background: white; border-radius: 22px; padding: 44px; box-shadow: 0 2px 40px rgba(0,0,0,0.07); margin-top: 52px; }
+.flabel { font-size: 0.73rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; display: block; }
+.finput {
+  width: 100%; background: var(--off); border: 1.5px solid transparent;
+  border-radius: 12px; padding: 13px 15px; font-family: 'Manrope',sans-serif;
+  font-size: 0.93rem; color: var(--text); outline: none;
+  transition: border-color 0.2s, background 0.2s; margin-bottom: 18px;
+}
+.finput::placeholder { color: var(--muted2); }
+.finput:focus { border-color: var(--blue); background: white; }
+.upload-cta {
+  width: 100%; background: var(--blue); color: white; border: none;
+  border-radius: 12px; padding: 15px; font-family: 'Manrope',sans-serif;
+  font-size: 0.97rem; font-weight: 600; cursor: none;
+  transition: background 0.2s, transform 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+}
+.upload-cta:hover { background: var(--blue-dark); }
+.upload-cta:active { transform: scale(0.98); }
+.upload-cta:disabled { background: var(--muted2); cursor: not-allowed; }
+
+#status {
+  font-size: 0.83rem; color: var(--muted); text-align: center;
+  margin-top: 12px; min-height: 18px; line-height: 1.5;
+}
+
+#video {
+  width: 100%; border-radius: 12px; margin-top: 18px; display: none;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+#video.show { display: block; }
+
+/* TESTIMONIALS */
+.testi-sec { padding: 110px 24px; background: white; }
+.tgrid { max-width: 920px; margin: 56px auto 0; display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; }
+.tc { background: var(--off); border-radius: 18px; padding: 30px; transition: transform 0.3s; }
+.tc:hover { transform: translateY(-4px); }
+.tc-q { font-size: 0.93rem; font-weight: 300; color: var(--text); line-height: 1.7; margin-bottom: 26px; }
+.tc-foot { display: flex; align-items: center; gap: 11px; }
+.tc-av { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.82rem; }
+.tc-name { font-weight: 600; font-size: 0.87rem; }
+.tc-role { font-size: 0.73rem; color: var(--muted); }
+
+/* PRICING */
+.price-sec { background: var(--off); padding: 110px 24px; }
+.pcard {
+  max-width: 380px; margin: 52px auto 0; background: white;
+  border-radius: 26px; padding: 42px;
+  box-shadow: 0 4px 60px rgba(0,0,0,0.08);
+}
+.pbadge { display: inline-block; background: rgba(0,113,227,0.1); color: var(--blue); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 11px; border-radius: 100px; margin-bottom: 22px; }
+.pamount { font-size: 3.4rem; font-weight: 700; letter-spacing: -0.05em; line-height: 1; }
+.pamount sub { font-size: 1.3rem; font-weight: 600; color: var(--muted); vertical-align: baseline; }
+.pamount sup { font-size: 1rem; color: var(--muted); vertical-align: super; font-weight: 400; }
+.pnote { font-size: 0.82rem; color: var(--muted); margin: 6px 0 28px; }
+.plist { list-style: none; margin-bottom: 32px; }
+.plist li { padding: 10px 0; border-bottom: 1px solid var(--off2); font-size: 0.88rem; display: flex; align-items: center; gap: 10px; }
+.plist li:last-child { border-bottom: none; }
+.pcheck { width: 19px; height: 19px; background: rgba(0,113,227,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--blue); font-size: 0.65rem; font-weight: 700; flex-shrink: 0; }
+.pcta { width: 100%; background: var(--blue); color: white; border: none; border-radius: 12px; padding: 15px; font-family: 'Manrope',sans-serif; font-size: 0.97rem; font-weight: 600; cursor: none; transition: background 0.2s; }
+.pcta:hover { background: var(--blue-dark); }
+.pfine { font-size: 0.76rem; color: var(--muted2); text-align: center; margin-top: 12px; }
+
+/* SECTION CENTER */
+.sc { text-align: center; max-width: 680px; margin: 0 auto; }
+.sc .chip { display: block; margin-bottom: 14px; }
+h2.disp { font-size: clamp(2rem, 4.5vw, 3.2rem); font-weight: 700; letter-spacing: -0.04em; line-height: 1.1; margin-bottom: 18px; }
+.body-l { font-size: 1.05rem; font-weight: 300; color: var(--muted); line-height: 1.65; }
+
+/* FOOTER */
+footer { background: #1d1d1f; padding: 56px 48px 36px; }
+.ftop { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 44px; gap: 40px; flex-wrap: wrap; }
+.fbrand { font-size: 1.05rem; font-weight: 700; color: white; letter-spacing: -0.03em; }
+.fcols { display: flex; gap: 56px; flex-wrap: wrap; }
+.fcol h4 { font-size: 0.72rem; font-weight: 600; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+.fcol a { display: block; font-size: 0.83rem; color: rgba(255,255,255,0.6); text-decoration: none; margin-bottom: 9px; transition: color 0.2s; }
+.fcol a:hover { color: white; }
+.fbot { border-top: 1px solid rgba(255,255,255,0.09); padding-top: 26px; font-size: 0.76rem; color: rgba(255,255,255,0.3); display: flex; justify-content: space-between; align-items: center; }
+
+/* REVEAL */
+.reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.72s ease, transform 0.72s ease; }
+.reveal.vis { opacity: 1; transform: none; }
+
+/* ANIMATIONS */
+@keyframes fadeUp { from{opacity:0;transform:translateY(26px)} to{opacity:1;transform:none} }
+
+/* ── API Key wrapper ── */
+.apikey-wrap {
+  position: relative;
+  margin-bottom: 18px;
+}
+.apikey-wrap .finput {
+  padding-right: 44px;
+  width: 100%;
+  margin-bottom: 0;
+}
+.apikey-toggle {
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--muted2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: color 0.2s;
+  line-height: 0;
+}
+.apikey-toggle:hover { color: var(--text); }
+.apikey-toggle:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+@media(max-width:768px){
+  .nav-links{display:none}
+  .frow{grid-template-columns:1fr;gap:36px}
+  .frow.rev{direction:ltr}
+  .stats-inner{grid-template-columns:repeat(2,1fr)}
+  .tgrid{grid-template-columns:1fr}
+  .ftop{flex-direction:column}
+  .fbot{flex-direction:column;gap:6px;text-align:center}
+  footer{padding:44px 24px 30px}
+  body{cursor:auto}
+  #cursor,#cursor-ring{display:none}
+}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">ClipMaker</div>
+  <ul class="nav-links">
+    <li><a href="#como-funciona">Como funciona</a></li>
+    <li><a href="#app">Experimente</a></li>
+    <li><a href="#preco">Preços</a></li>
+  </ul>
+  <a href="#app" class="nav-cta">Começar grátis →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-tag"><div class="tag-dot"></div>Novo — Powered by Gemini AI</div>
+  <h1>Vídeos longos.<br><span class="grad">Clipes virais.</span></h1>
+  <p class="hero-sub">Nossa IA analisa cada frame, identifica os momentos de maior impacto e entrega clipes prontos para dominar o feed. Automático.</p>
+  <div class="hero-btns">
+    <button class="btn-pill" onclick="document.getElementById('app').scrollIntoView({behavior:'smooth'})">Testar agora — é grátis</button>
+    <button class="btn-ghost-pill">Ver como funciona <span>→</span></button>
+  </div>
+
+  <div class="hero-visual">
+    <div class="hw">
+      <div class="hwbar">
+        <div class="hwdot" style="background:#ff5f57"></div>
+        <div class="hwdot" style="background:#ffc02d"></div>
+        <div class="hwdot" style="background:#29c940"></div>
+        <span style="margin-left:10px;font-size:0.7rem;color:#636366;font-family:'Manrope'">ClipMaker — Análise em andamento</span>
+      </div>
+      <div class="hwbody">
+        <div class="hwleft">
+          <div class="hwlabel">Vídeo original · 42 min</div>
+          <div class="waveform" id="waveform"></div>
+          <div style="font-size:0.7rem;color:#636366;font-family:'Manrope';font-weight:300">Analisando momentos de alto engajamento...</div>
+        </div>
+        <div class="hwdivider"></div>
+        <div class="hwright">
+          <div class="hwlabel">Clipes detectados · 5</div>
+          <div class="hclip hl"><div class="hdot" style="background:#30d158"></div><div class="hclip-t">Momento viral — pitch perfeito</div><div class="hclip-time">0:42–1:18</div></div>
+          <div class="hclip"><div class="hdot" style="background:#2997ff"></div><div class="hclip-t">Frase de impacto detectada</div><div class="hclip-time">4:12–4:58</div></div>
+          <div class="hclip"><div class="hdot" style="background:#2997ff"></div><div class="hclip-t">Pico de emoção — 94% score</div><div class="hclip-time">18:03–19:21</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="reveal"><div class="sn">10<em>k+</em></div><div class="sd">Criadores ativos</div></div>
+    <div class="reveal" style="transition-delay:.1s"><div class="sn">2<em>M+</em></div><div class="sd">Clipes gerados</div></div>
+    <div class="reveal" style="transition-delay:.2s"><div class="sn">3<em>×</em></div><div class="sd">Mais engajamento</div></div>
+    <div class="reveal" style="transition-delay:.3s"><div class="sn">98<em>%</em></div><div class="sd">Aprovação</div></div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="hiw" id="como-funciona">
+  <div class="sc reveal">
+    <span class="chip">Como funciona</span>
+    <h2 class="disp">Três passos.<br>Resultado em minutos.</h2>
+    <p class="body-l">Upload, análise, download. Nossa IA cuida do resto enquanto você foca no que importa.</p>
+  </div>
+
+  <div class="features-wrap">
+
+    <div class="frow">
+      <div class="ft">
+        <span class="chip">Passo 01</span>
+        <h3>Envie qualquer vídeo</h3>
+        <p>Podcasts, entrevistas, aulas, lives. Suportamos todos os formatos — mp4, mov, avi. Sem limite de duração.</p>
+        <a href="#app" class="flink">Fazer upload <span>→</span></a>
+      </div>
+      <div class="fv">
+        <div class="uploader">
+          <div class="up-icon">
+            <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#0071e3" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <div style="font-size:0.78rem;color:var(--muted);text-align:center">Enviando <strong style="color:var(--text)">podcast_ep42.mp4</strong></div>
+          <div class="up-prog-wrap"><div class="up-fill"></div></div>
+          <div style="font-size:0.7rem;color:var(--muted2)">67% — 1.2 GB</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="frow rev">
+      <div class="ft">
+        <span class="chip">Passo 02</span>
+        <h3>IA analisa cada segundo</h3>
+        <p>Gemini processa áudio, vídeo e contexto semântico para encontrar picos de emoção, frases de impacto e momentos compartilháveis.</p>
+        <a href="#app" class="flink">Saiba mais <span>→</span></a>
+      </div>
+      <div class="fv">
+        <div class="ai-panel">
+          <div class="ai-row">
+            <div class="ai-row-head"><span>Energia emocional</span><span class="ai-score">87%</span></div>
+            <div class="ai-track"><div class="ai-fill" style="width:87%"></div></div>
+          </div>
+          <div class="ai-row">
+            <div class="ai-row-head"><span>Clareza do discurso</span><span class="ai-score">94%</span></div>
+            <div class="ai-track"><div class="ai-fill" style="width:94%"></div></div>
+          </div>
+          <div class="ai-row">
+            <div class="ai-row-head"><span>Potencial viral</span><span class="ai-score green">96%</span></div>
+            <div class="ai-track"><div class="ai-fill" style="width:96%;background:linear-gradient(90deg,#1a7f37,#30d158)"></div></div>
+          </div>
+          <div class="ai-row">
+            <div class="ai-row-head"><span>Engajamento estimado</span><span class="ai-score">78%</span></div>
+            <div class="ai-track"><div class="ai-fill" style="width:78%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="frow">
+      <div class="ft">
+        <span class="chip">Passo 03</span>
+        <h3>Clipes prontos para publicar</h3>
+        <p>Receba os melhores momentos já cortados, com legendas automáticas e prontos para TikTok, Reels e YouTube Shorts.</p>
+        <a href="#app" class="flink">Experimentar <span>→</span></a>
+      </div>
+      <div class="fv">
+        <div class="clips-panel">
+          <div class="cthumb">
+            <div class="cicon"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#0071e3" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+            <div><div class="ctitle">Clip 01 · 0:36</div><div class="cmeta">Score viral: 96%</div></div>
+            <span class="cbadge" style="background:#e3f5e9;color:#1a7f37">Viral</span>
+          </div>
+          <div class="cthumb">
+            <div class="cicon"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#0071e3" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+            <div><div class="ctitle">Clip 02 · 0:58</div><div class="cmeta">Score viral: 87%</div></div>
+            <span class="cbadge" style="background:#fff4cc;color:#9a6700">Alto</span>
+          </div>
+          <div class="cthumb">
+            <div class="cicon"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#0071e3" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+            <div><div class="ctitle">Clip 03 · 1:12</div><div class="cmeta">Score viral: 81%</div></div>
+            <span class="cbadge" style="background:#fff4cc;color:#9a6700">Alto</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- APP -->
+<section class="app-sec" id="app">
+  <div class="app-inner">
+    <div class="sc reveal">
+      <span class="chip">Experimente</span>
+      <h2 class="disp">Teste com seu vídeo</h2>
+      <p class="body-l">Cole sua API Key do Gemini, faça upload de qualquer vídeo e veja os clipes sendo identificados em tempo real.</p>
+    </div>
+    <div class="app-card reveal">
+      <label class="flabel" for="apiKey">API Key — Google Gemini</label>
+
+      <!-- ── MODIFIED: wrapped input with eye toggle ── -->
+      <div class="apikey-wrap">
+        <input id="apiKey" type="password" placeholder="AIzaSy••••••••••••••••••"
+               class="finput" autocomplete="off"/>
+        <button type="button" id="toggleApiKey" class="apikey-toggle" aria-label="Mostrar chave">
+          <!-- EYE OPEN (default: key is hidden, show the open eye to invite reveal) -->
+          <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <!-- EYE CLOSED (shown when key is visible) -->
+          <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               style="display:none">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8
+                     a18.45 18.45 0 0 1 5.06-5.94"/>
+            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8
+                     a18.5 18.5 0 0 1-2.16 3.19"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+          </svg>
+        </button>
+      </div>
+      <!-- ── END MODIFIED ── -->
+
+      <button id="uploadWidget" class="upload-cta">
+        <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Fazer upload do vídeo
+      </button>
+      <p id="status"></p>
+
+      <video id="video" controls></video>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testi-sec">
+  <div class="sc reveal">
+    <span class="chip">Depoimentos</span>
+    <h2 class="disp">Amado por criadores</h2>
+  </div>
+  <div class="tgrid">
+    <div class="tc reveal">
+      <p class="tc-q">"ClipMaker transformou nossa produção de conteúdo. O que levava dias de edição agora sai em minutos, com qualidade ainda melhor."</p>
+      <div class="tc-foot">
+        <div class="tc-av" style="background:#e8f4ff;color:#0071e3">AS</div>
+        <div><div class="tc-name">Ana Silva</div><div class="tc-role">Head of Content</div></div>
+      </div>
+    </div>
+    <div class="tc reveal" style="transition-delay:.12s">
+      <p class="tc-q">"Interface que parece Apple, resultado que parece mágica. Já testei cinco ferramentas — essa é a única que realmente funciona."</p>
+      <div class="tc-foot">
+        <div class="tc-av" style="background:#e3f5e9;color:#1a7f37">BC</div>
+        <div><div class="tc-name">Bruno Costa</div><div class="tc-role">Content Creator · 500k</div></div>
+      </div>
+    </div>
+    <div class="tc reveal" style="transition-delay:.24s">
+      <p class="tc-q">"A IA entende contexto, emoção e ritmo. Cada clipe que ela seleciona é exatamente o que eu escolheria após horas de revisão."</p>
+      <div class="tc-foot">
+        <div class="tc-av" style="background:#f0eeff;color:#5e3aee">CS</div>
+        <div><div class="tc-name">Carla Santos</div><div class="tc-role">Product Lead · Agência Digital</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="price-sec" id="preco">
+  <div class="sc reveal">
+    <span class="chip">Planos</span>
+    <h2 class="disp">Um plano. Tudo incluso.</h2>
+    <p class="body-l">Sem surpresas. Sem limites artificiais. Cancele quando quiser.</p>
+  </div>
+  <div class="pcard reveal">
+    <div class="pbadge">Pro</div>
+    <div class="pamount"><sub>R$</sub>29<sup>/mês</sup></div>
+    <p class="pnote">7 dias grátis para testar</p>
+    <ul class="plist">
+      <li><span class="pcheck">✓</span>Clipes ilimitados por mês</li>
+      <li><span class="pcheck">✓</span>Legendas automáticas PT/EN</li>
+      <li><span class="pcheck">✓</span>Exportação em 4K</li>
+      <li><span class="pcheck">✓</span>Armazenamento na nuvem 50 GB</li>
+      <li><span class="pcheck">✓</span>Análise de engajamento</li>
+      <li><span class="pcheck">✓</span>Suporte prioritário</li>
+    </ul>
+    <button class="pcta">Começar teste grátis</button>
+    <p class="pfine">Sem cartão de crédito necessário</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="ftop">
+    <div class="fbrand">ClipMaker</div>
+    <div class="fcols">
+      <div class="fcol"><h4>Produto</h4><a href="#">Funcionalidades</a><a href="#">Preços</a><a href="#">Changelog</a></div>
+      <div class="fcol"><h4>Empresa</h4><a href="#">Sobre</a><a href="#">Blog</a><a href="#">Contato</a></div>
+      <div class="fcol"><h4>Legal</h4><a href="#">Privacidade</a><a href="#">Termos</a></div>
+    </div>
+  </div>
+  <div class="fbot">
+    <span>© 2025 ClipMaker. Todos os direitos reservados.</span>
+    <span>Feito com cuidado no Brasil 🇧🇷</span>
+  </div>
+</footer>
+
+<script>
+/* ─── Custom cursor ─── */
+const cur = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let mx = 0, my = 0, rx = 0, ry = 0;
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+(function tick() {
+  cur.style.left = mx + 'px'; cur.style.top = my + 'px';
+  rx += (mx - rx) * 0.11; ry += (my - ry) * 0.11;
+  ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+  requestAnimationFrame(tick);
+})();
+
+/* ─── Waveform ─── */
+const wf = document.getElementById('waveform');
+for (let i = 0; i < 42; i++) {
+  const b = document.createElement('div');
+  b.className = 'wbar' + (Math.random() > .7 ? ' hi' : '');
+  b.style.height = (Math.random() * 46 + 8) + 'px';
+  wf.appendChild(b);
+}
+setInterval(() => {
+  document.querySelectorAll('.wbar').forEach(b => {
+    b.style.height = (Math.random() * 46 + 8) + 'px';
+    b.classList.toggle('hi', Math.random() > .72);
+  });
+}, 850);
+
+/* ─── Scroll reveal ─── */
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal, .frow').forEach(el => obs.observe(el));
+
+/* ─── UI refs ─── */
+const el = {
+  status:        document.getElementById('status'),
+  video:         document.getElementById('video'),
+  apiKey:        document.getElementById('apiKey'),
+  button:        document.getElementById('uploadWidget'),
+};
+
+/* ─── API Key visibility toggle ─── */
+document.getElementById('toggleApiKey').addEventListener('click', function () {
+  const input      = document.getElementById('apiKey');
+  const eyeOpen    = document.getElementById('eyeOpen');
+  const eyeClosed  = document.getElementById('eyeClosed');
+  const isHidden   = input.type === 'password';
+
+  input.type               = isHidden ? 'text'    : 'password';
+  eyeOpen.style.display    = isHidden ? 'none'    : '';
+  eyeClosed.style.display  = isHidden ? ''        : 'none';
+  this.setAttribute('aria-label', isHidden ? 'Ocultar chave' : 'Mostrar chave');
+});
+
+/* ─── Cloudinary config ─── */
+const config = {
+  cloudName:    'dcjcb1kbn',
+  uploadPreset: 'upload_nlw',
+  resourceType: 'video',
+};
+
+/* ─── App logic (ported from v1) ─── */
+const app = {
+  public_id: '',
+  version:   '',
+
+  getTranscriptionURL() {
+    return `https://res.cloudinary.com/${config.cloudName}/raw/upload/v${Date.now()}/${app.public_id}.transcript`;
+  },
+
+  async waitForTranscription() {
+    const maxAttempts = 30;
+    const interval    = 5000;
+
+    setStatus('⏳ Aguardando transcrição...');
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      setStatus(`⏳ Tentativa ${attempt}/${maxAttempts} — verificando transcrição...`);
+      try {
+        const url      = app.getTranscriptionURL();
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          setStatus('✅ Transcrição pronta!');
+          return data;
+        }
+      } catch (e) {
+        // ainda não disponível, continua tentando
+      }
+      await new Promise(resolve => setTimeout(resolve, interval));
+    }
+
+    setStatus('❌ Transcrição não ficou pronta a tempo.');
+    return null;
+  },
+
+  async getTranscription() {
+    const data = await app.waitForTranscription();
+    if (!data) return null;
+
+    const transcription = data.pages
+      ?.map(page => page.alternatives?.[0]?.transcript)
+      .filter(Boolean)
+      .join(' ');
+
+    setStatus('✅ Transcrição gerada com sucesso!');
+    return transcription || JSON.stringify(data, null, 2);
+  },
+
+  async getViralMoment() {
+    setStatus('📝 Obtendo transcrição...');
+    const transcription = await app.getTranscription();
+    if (!transcription) {
+      setStatus('❌ Não foi possível obter a transcrição.');
+      return null;
+    }
+
+    setStatus('🤖 Enviando para o Gemini...');
+
+    const model          = 'gemini-2.0-flash';
+    const endpointGemini = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+
+    const prompt = `
+Role: You are a professional video editor specializing in viral content.
+Task: Analyze the transcription below and identify the most engaging, funny, or surprising segment.
+Constraints:
+1. Duration: Minimum 30 seconds, Maximum 60 seconds.
+2. Format: Return ONLY the start and end string for Cloudinary. Format: so_<start_seconds>,eo_<end_seconds>
+3. Examples: "so_10,eo_20" or "so_12.5,eo_45.2"
+4. CRITICAL: Do not use markdown, do not use quotes, do not explain. Return ONLY the raw string.
+
+Transcription:
+${transcription}`;
+
+    const headers = {
+      'x-goog-api-key': el.apiKey.value,
+      'Content-Type':   'application/json',
+    };
+
+    const contents = [{ parts: [{ text: prompt }] }];
+
+    const maxRetries = 5;
+    let attempt = 0;
+
+    while (attempt < maxRetries) {
+      try {
+        const response = await fetch(endpointGemini, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ contents }),
+        });
+
+        // 429 = rate limit: espera tempo exponencial antes de tentar de novo
+        if (response.status === 429) {
+          attempt++;
+          const waitSec = Math.pow(2, attempt) * 10; // 20s, 40s, 80s...
+          setStatus(`⏳ Rate limit do Gemini (429). Aguardando ${waitSec}s... (tentativa ${attempt}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, waitSec * 1000));
+          continue;
+        }
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+
+        const data    = await response.json();
+        const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        return rawText.replace(/```/g, '').replace(/json/g, '').trim();
+      } catch (error) {
+        attempt++;
+        if (attempt >= maxRetries) throw error;
+        const waitSec = Math.pow(2, attempt) * 5;
+        console.log(`Retry ${attempt}/${maxRetries} após erro: ${error.message}. Aguardando ${waitSec}s...`);
+        setStatus(`⚠️ Erro na tentativa ${attempt}. Aguardando ${waitSec}s...`);
+        await new Promise(resolve => setTimeout(resolve, waitSec * 1000));
+      }
+    }
+  },
+};
+
+/* ─── Helpers ─── */
+function setStatus(msg) {
+  el.status.textContent = msg;
+  console.log(msg);
+}
+
+function setLoading(loading) {
+  el.button.disabled = loading;
+  el.button.innerHTML = loading
+    ? `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg> Processando...`
+    : `<svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Fazer upload do vídeo`;
+}
+
+/* spin keyframe */
+const spinStyle = document.createElement('style');
+spinStyle.textContent = '@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
+document.head.appendChild(spinStyle);
+
+/* ─── Cloudinary widget ─── */
+const myWidget = cloudinary.createUploadWidget(
+  config,
+  async (error, result) => {
+    if (error) {
+      setStatus('❌ Erro no upload: ' + error.message);
+      setLoading(false);
+      return;
+    }
+
+    if (result && result.event === 'success') {
+      console.log('Upload concluído:', result.info);
+
+      app.public_id = result.info.public_id;
+      app.version   = result.info.version;
+
+      setStatus('✅ Upload concluído! Iniciando transcrição...');
+
+      try {
+        const viralMoment    = await app.getViralMoment();
+        if (!viralMoment) return;
+
+        const viralMomentURL = `https://res.cloudinary.com/${config.cloudName}/video/upload/${viralMoment}/${app.public_id}.mp4`;
+        el.video.setAttribute('src', viralMomentURL);
+        el.video.classList.add('show');
+        setStatus('🎬 Clipe viral pronto!');
+      } catch (err) {
+        setStatus('❌ Erro ao gerar clipe: ' + err.message);
+        console.error({ err });
+      } finally {
+        setLoading(false);
+      }
+    }
+  }
+);
+
+/* ─── Upload button ─── */
+el.button.addEventListener('click', () => {
+  if (!el.apiKey.value.trim()) {
+    el.status.style.color = '#d93025';
+    setStatus('Insira sua API Key do Gemini primeiro.');
+    el.apiKey.focus();
+    return;
+  }
+  el.status.style.color = 'var(--muted)';
+  setLoading(true);
+  myWidget.open();
+}, false);
+</script>
+</body>
+</html>
